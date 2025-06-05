@@ -195,9 +195,12 @@ pub mod convert_to {
     ) -> Option<proto::TransactionError> {
         match status {
             Ok(()) => None,
-            Err(err) => Some(proto::TransactionError {
-                err: bincode::serialize(&err).expect("transaction error to serialize to bytes"),
-            }),
+            Err(err) => {
+                let mut buf = Vec::with_capacity(1024 * 1024); // 1MB buffer
+                bincode::serialize_into(&mut buf, &err)
+                    .expect("transaction error to serialize to bytes");
+                Some(proto::TransactionError { err: buf })
+            }
         }
     }
 
